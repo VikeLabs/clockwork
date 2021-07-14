@@ -1,11 +1,10 @@
 import { PropsWithChildren, useCallback } from 'react';
 
-import { ChevronRightIcon, AddIcon, InfoOutlineIcon, CloseIcon } from '@chakra-ui/icons';
-import { Box, Text, Flex, VStack, IconButton } from '@chakra-ui/react';
+import { WarningTwoIcon, ChevronRightIcon, AddIcon, InfoOutlineIcon, CloseIcon } from '@chakra-ui/icons';
+import { Box, Text, Flex, VStack, IconButton, Tooltip } from '@chakra-ui/react';
 import { Link, useParams } from 'react-router-dom';
 
 import { useSavedCourses } from 'lib/hooks/useSavedCourses';
-
 export interface CardProps {
   /**
    * The title of course
@@ -41,9 +40,21 @@ export interface CardProps {
    * Boolean to check if in schedule mode
    */
   schedule?: boolean;
+  /**
+   * Boolean to check if a subject is in session or not
+   */
+  inSessionSubject?: boolean;
 }
 
-export function Card({ subject, title, code, selected, schedule, pid }: PropsWithChildren<CardProps>): JSX.Element {
+export function Card({
+  subject,
+  title,
+  code,
+  selected,
+  schedule,
+  pid,
+  inSessionSubject,
+}: PropsWithChildren<CardProps>): JSX.Element {
   let { term } = useParams();
 
   const { addCourse, deleteCourse, contains } = useSavedCourses();
@@ -71,7 +82,15 @@ export function Card({ subject, title, code, selected, schedule, pid }: PropsWit
         <Box>
           <IconButton
             aria-label="Select course"
-            icon={<ChevronRightIcon />}
+            icon={
+              inSessionSubject ? (
+                <ChevronRightIcon />
+              ) : (
+                <Tooltip label="No courses are offered in this term for this subject!" aria-label="A tooltip">
+                  <WarningTwoIcon color="red" />
+                </Tooltip>
+              )
+            }
             size="md"
             background="null"
             _hover={{ bg: 'none' }}
@@ -101,32 +120,70 @@ export function Card({ subject, title, code, selected, schedule, pid }: PropsWit
     }
   };
 
-  return (
-    <Box
-      bgColor={selected ? undefined : 'white'}
-      bgGradient={selected ? 'linear(to-l, #2e95d1, #7cbce2)' : undefined}
-      color={selected ? 'white' : 'black'}
-      boxShadow="md"
-      py={2}
-      px={4}
-      my={1}
-      cursor={!schedule ? 'pointer' : 'auto'}
-      _hover={{
-        bgGradient: schedule ? undefined : selected ? undefined : 'linear(to-l, #39c686, #80dbb1)',
-        color: schedule ? undefined : 'white',
-      }}
-    >
-      <Flex direction="row" alignItems="center" justifyContent="space-between">
-        <VStack alignItems="start" spacing="0">
-          <Text fontSize="lg" fontWeight="bold" p={0} m={0}>
-            {subject} {code}
-          </Text>
-          <Text fontSize="sm" fontWeight="normal" p={0} m={0}>
-            {title}
-          </Text>
-        </VStack>
-        {buttons(code, schedule)}
-      </Flex>
-    </Box>
-  );
+  if (inSessionSubject === undefined) {
+    return (
+      <Box
+        bgColor={selected ? undefined : 'white'}
+        bgGradient={selected ? 'linear(to-l, #2e95d1, #7cbce2)' : undefined}
+        color={selected ? 'white' : 'black'}
+        boxShadow="md"
+        py={2}
+        px={4}
+        my={1}
+        cursor={!schedule ? 'pointer' : 'auto'}
+        _hover={{
+          bgGradient: schedule ? undefined : selected ? undefined : 'linear(to-l, #39c686, #80dbb1)',
+
+          color: schedule ? undefined : 'white',
+        }}
+      >
+        <Flex direction="row" alignItems="center" justifyContent="space-between">
+          <VStack alignItems="start" spacing="0">
+            <Text fontSize="lg" fontWeight="bold" p={0} m={0}>
+              {subject} {code}
+            </Text>
+            <Text fontSize="sm" fontWeight="normal" p={0} m={0}>
+              {title}
+            </Text>
+          </VStack>
+          {buttons(code, schedule)}
+        </Flex>
+      </Box>
+    );
+  } else {
+    return (
+      <Box
+        bgColor={selected ? (inSessionSubject ? undefined : '#d3d3d3') : inSessionSubject ? 'white' : '#d3d3d3'}
+        bgGradient={selected ? 'linear(to-l, #2e95d1, #7cbce2)' : undefined}
+        color={selected ? 'white' : 'black'}
+        boxShadow="md"
+        py={2}
+        px={4}
+        my={1}
+        cursor={!schedule ? (inSessionSubject ? 'pointer' : 'auto') : 'auto'}
+        _hover={{
+          bgGradient: schedule
+            ? undefined
+            : selected
+            ? undefined
+            : inSessionSubject
+            ? 'linear(to-l, #39c686, #80dbb1)'
+            : 'linear(to-l, #d3d3d3, #d3d3d3)',
+          color: schedule ? undefined : 'white',
+        }}
+      >
+        <Flex direction="row" alignItems="center" justifyContent="space-between">
+          <VStack alignItems="start" spacing="0">
+            <Text fontSize="lg" fontWeight="bold" p={0} m={0}>
+              {subject} {code}
+            </Text>
+            <Text fontSize="sm" fontWeight="normal" p={0} m={0}>
+              {title}
+            </Text>
+          </VStack>
+          {buttons(code, schedule)}
+        </Flex>
+      </Box>
+    );
+  }
 }

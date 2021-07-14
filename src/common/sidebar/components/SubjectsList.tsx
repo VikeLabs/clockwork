@@ -1,8 +1,8 @@
-import { LinkBox } from '@chakra-ui/layout';
+import { LinkBox, Box } from '@chakra-ui/layout';
 import { Collapse } from '@chakra-ui/transition';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 
-import { KualiSubject } from 'lib/fetchers';
+import { InSessionSubject } from 'lib/types';
 
 import { Card } from './Card';
 
@@ -15,7 +15,7 @@ type SubjectsListProps = {
    * Subject to be displayed
    * EX) SENG 265 -> SENG
    */
-  subjects: KualiSubject[];
+  subjects: InSessionSubject[];
 };
 
 export function SubjectsList({ term, subjects }: SubjectsListProps): JSX.Element {
@@ -27,18 +27,28 @@ export function SubjectsList({ term, subjects }: SubjectsListProps): JSX.Element
 
   return (
     <Collapse in style={{ overflowY: 'scroll' }}>
-      {subjects.map((subject, index) => (
-        <LinkBox
-          as={Link}
-          to={{
-            pathname: `/${route}/${term}/${subject.subject}`,
-            search: pid ? `?pid=${pid}` : undefined,
-          }}
-          key={index}
-        >
-          <Card subject={subject.subject} title={subject.title} />
-        </LinkBox>
-      ))}
+      {subjects.map((subject, index) => {
+        if (subject.inSession) {
+          return (
+            <LinkBox
+              as={Link}
+              to={{
+                pathname: `/${route}/${term}/${subject.subject}`,
+                search: pid ? `?pid=${pid}` : undefined,
+              }}
+              key={index}
+            >
+              <Card subject={subject.subject} inSessionSubject={subject.inSession} title={subject.title} />
+            </LinkBox>
+          );
+        } else {
+          return (
+            <Box key={index}>
+              <Card subject={subject.subject} inSessionSubject={subject.inSession} title={subject.title} />
+            </Box>
+          );
+        }
+      })}
     </Collapse>
   );
 }
